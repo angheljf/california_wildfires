@@ -1,5 +1,16 @@
+// Grab data from Flask route http://127.0.0.1:5000/api/v1.0/bar_data
+// Fetch the wildfire data from the Flask route
+d3.json("http://127.0.0.1:5000/api/v1.0/bar_data").then(function(data) {
+  wildfireData = data;
+  console.log(wildfireData);
+}).catch(function(error) {
+  console.error("Error loading the data:", error);
+});
+ 
+
 // Function to determine the color based on total acres burned 
 function chooseColor(acres) {
+  if (!acres) return "#98ee00"; // handle null/undefined values
   if (acres > 100000) return "#ea2c2c"; // high acres burned
   if (acres > 50000) return "#ea822c"; // medium-high acres burned
   if (acres > 10000) return "#ee9c00"; // medium acres burned
@@ -48,8 +59,8 @@ function createMap() {
       onEachFeature: function (feature, layer) {
         // Display county name and acres burned on hover
         let county = wildfireData.find(data => data.county === feature.properties.name);
-        let acresBurned = county ? county.total_acres_burned : 0;
-        let numWildfires = county ? county.num_wildfires : 0;
+        let acresBurned = county ? county.total_acres_burned || 0 : 0;
+        let numWildfires = county ? county.num_wildfires || 0 : 0;
         layer.bindPopup(`<h3>${feature.properties.name}</h3>
                          <p>Acres Burned: ${acresBurned.toLocaleString()}</p>
                          <p>Number of Wildfires: ${numWildfires}</p>`);
