@@ -42,3 +42,7 @@ body,
 nav .nav-link {
   color: #fff !important;
 }
+
+#wildfireTable tbody tr:hover {
+    cursor: pointer;
+}

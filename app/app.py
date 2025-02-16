@@ -72,14 +72,14 @@ def table_data():
     for col in numeric_columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
     
-    # Group by county and calculate summaries
-    county_summary = df.groupby('county').agg({
+    # Group by county and year and calculate summaries
+    county_summary = df.groupby(['county', 'year']).agg({
         'acres_burned': 'sum',
         'name': 'count'
     }).reset_index()
     
     # Rename columns
-    county_summary.columns = ['county', 'total_acres_burned', 'num_wildfires']
+    county_summary.columns = ['county', 'year', 'total_acres_burned', 'num_wildfires']
     
     # Convert NaN values to None and convert to native Python types
     county_summary = county_summary.where(pd.notnull(county_summary), None)

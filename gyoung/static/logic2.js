@@ -65,9 +65,7 @@ function getData() {
     let url = "http://127.0.0.1:5000/api/v1.0/map_data";
     d3.json(url).then(function(response) {
         let selectedYear = document.getElementById("year").value;
-        let filteredResponse = response.filter(item => item.year == selectedYear);
-
-
+        let filteredResponse = selectedYear === "all" ? response : response.filter(item => item.year == selectedYear);
         createMarkers(filteredResponse);
     });
 }
@@ -77,7 +75,7 @@ function updateVisualization() {
     let selectedYear = document.getElementById("year").value;
     let url = "http://127.0.0.1:5000/api/v1.0/map_data";
     d3.json(url).then(function(response) {
-        let filteredResponse = response.filter(item => item.year == selectedYear);
+        let filteredResponse = selectedYear === "all" ? response : response.filter(item => item.year == selectedYear);
         createMarkers(filteredResponse);
     });
 }
