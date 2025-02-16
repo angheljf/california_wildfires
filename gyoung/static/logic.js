@@ -10,6 +10,7 @@ function generateTable() {
     d3.json("http://127.0.0.1:5000/api/v1.0/table_data").then(function(data) {
         tableData = data;
         renderTable(data);
+        renderBarChart(data); // Added: Render bar chart on data load
     }).catch(function(error) {
         console.error("Error loading the data:", error);
     });
@@ -161,6 +162,32 @@ function getData() {
   });
 }
 
+// New function to render bar chart with Plotly
+function renderBarChart(data) {
+    // Extract y (county) and x (number of wildfires) for horizontal bar chart
+    const yValues = data.map(item => item.county);
+    const xValues = data.map(item => item.num_wildfires);
+
+    var trace = {
+        x: xValues,
+        y: yValues,
+        type: 'bar',
+        orientation: 'h',
+        marker: { color: '#df691a' } // Updated: Set bar color to match the Generate Visualization button
+    };
+
+    var layout = {
+        title: 'Wildfires by County',
+        xaxis: { title: 'Number of Wildfires' },
+        margin: { t: 30, l: 150 }, // Increased left margin to prevent cut off labels
+        paper_bgcolor: 'rgba(0,0,0,0)', // Remove paper background
+        plot_bgcolor: 'rgba(0,0,0,0)',   // Remove plot background
+        font: { color: 'white' } // Added: Set font color to white
+    };
+
+    Plotly.newPlot('barChart', [trace], layout);
+}
+
 // Define the updateVisualization() function with filtering and marker clearing
 function updateVisualization() {
     let selectedYear = document.getElementById("yearSelect").value;
@@ -175,6 +202,9 @@ function updateVisualization() {
     // Update table data
     let filteredTableData = selectedYear === "all" ? tableData : tableData.filter(row => row.year == selectedYear);
     renderTable(filteredTableData);
+    
+    // Update bar chart visualization
+    renderBarChart(filteredTableData);
 }
 
 // Add layer control to the map
