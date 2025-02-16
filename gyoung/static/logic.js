@@ -177,7 +177,6 @@ function renderBarChart(data) {
     };
 
     var layout = {
-        title: 'Wildfires by County',
         xaxis: { title: 'Number of Wildfires' },
         margin: { t: 30, l: 150 }, // Increased left margin to prevent cut off labels
         paper_bgcolor: 'rgba(0,0,0,0)', // Remove paper background
