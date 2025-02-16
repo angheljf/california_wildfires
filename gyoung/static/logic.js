@@ -5,6 +5,8 @@ let countySortOrder = 'asc';   // Global sort order for county
 let yearSortOrder = 'asc';
 
 let markersByCounty = {}; // New global variable to map county to a marker
+let tableExpanded = false;         // New global flag for table expansion
+let lastRenderData = [];           // New global storage for last rendered data
 
 function generateTable() {
     d3.json("http://127.0.0.1:5000/api/v1.0/table_data").then(function(data) {
@@ -19,7 +21,9 @@ function generateTable() {
 function renderTable(data) {
     const tableBody = document.getElementById('wildfireTable').getElementsByTagName('tbody')[0];
     tableBody.innerHTML = '';
-    data.forEach(row => {
+    lastRenderData = data; // Store for future toggling
+    const rowsToShow = (!tableExpanded && data.length > 23) ? data.slice(0, 23) : data;
+    rowsToShow.forEach(row => {
         const newRow = tableBody.insertRow();
         newRow.setAttribute("data-county", row.county); // Attach county to the row
         newRow.addEventListener("click", function() {
@@ -37,6 +41,28 @@ function renderTable(data) {
             <td>${row.year}</td>
         `;
     });
+    if(data.length > 23){
+        const buttonRow = tableBody.insertRow();
+        const cell = buttonRow.insertCell();
+        cell.colSpan = 4; // Adjust based on number of columns
+        if(!tableExpanded) {
+            cell.innerHTML = '<button class="btn btn-secondary btn-sm" onclick="expandTable()">Show More</button>';
+        } else {
+            cell.innerHTML = '<button class="btn btn-secondary btn-sm" onclick="collapseTable()">Show Less</button>';
+        }
+    }
+}
+
+// New function to expand the table
+function expandTable() {
+    tableExpanded = true;
+    renderTable(lastRenderData);
+}
+
+// New function to collapse the table
+function collapseTable() {
+    tableExpanded = false;
+    renderTable(lastRenderData);
 }
 
 function toggleSortWildfires() {
@@ -104,7 +130,7 @@ let streetmap = L.tileLayer(
 
 // Create the map object with center in California
 let map = L.map('map', {
-  center: [36.7783, -119.4179],
+  center: [37.4783, -119.4179],
   zoom: 6,
   layers: [basemap]
 });
@@ -190,6 +216,9 @@ function renderBarChart(data) {
 // Define the updateVisualization() function with filtering and marker clearing
 function updateVisualization() {
     let selectedYear = document.getElementById("yearSelect").value;
+    tableExpanded = false; // Reset table expansion flag for new selection
+    // Reset map zoom and center to default values
+    map.setView([37.4783, -119.4179], 6);
     
     // Update markers on the map
     let url = "http://127.0.0.1:5000/api/v1.0/map_data";
