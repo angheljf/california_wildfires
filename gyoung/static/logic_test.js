@@ -8,16 +8,11 @@ let markersByCounty = {}; // New global variable to map county to a marker
 let tableExpanded = false;         // New global flag for table expansion
 let lastRenderData = [];           // New global storage for last rendered data
 
-// New global variables for choropleth map
-let countyLayer;
-let aggregatedAcres = {};
-
 function generateTable() {
     d3.json("http://127.0.0.1:5000/api/v1.0/table_data").then(function(data) {
         tableData = data;
         renderTable(data);
         renderBarChart(data); // Added: Render bar chart on data load
-        updateChoropleth(data); // New: Update choropleth based on table data
     }).catch(function(error) {
         console.error("Error loading the data:", error);
     });
@@ -137,61 +132,29 @@ let streetmap = L.tileLayer(
 let map = L.map('map', {
   center: [37.4783, -119.4179],
   zoom: 6,
-  layers: [streetmap]
+  layers: [basemap]
 });
 
 // Add the basemap to the map
-streetmap.addTo(map);
+basemap.addTo(map);
 
-// Create and add a global marker cluster group to be toggled via overlay control
+// Add a global marker cluster group to hold markers and add it to the map
 let markersGroup = L.markerClusterGroup();
-// Instead of adding markersGroup directly, it will be added through layer control
-// map.addLayer(markersGroup); 
+map.addLayer(markersGroup);
 
-// Function to determine color based on acres burned
-function getColor(acres) {
-    return acres > 1000000 ? '#800026' :
-           acres > 500000  ? '#BD0026' :
-           acres > 200000  ? '#E31A1C' :
-           acres > 100000  ? '#FC4E2A' :
-           acres > 50000   ? '#FD8D3C' :
-           acres > 20000   ? '#FEB24C' :
-           acres > 10000   ? '#FED976' :
-                             '#FFEDA0';
-}
-
-// Function to style each county feature using aggregated acres data
-function styleFeature(feature) {
-    let countyName = feature.properties.name;
-    let acres = aggregatedAcres[countyName] || 0;
-    return {
-        fillColor: getColor(acres),
-        weight: 1.5,
-        opacity: 1,
-        color: 'black',
-        fillOpacity: 0.7
-    };
-}
-
-// Function to update choropleth style by aggregating acres burned per county
-function updateChoropleth(data) {
-    aggregatedAcres = {};
-    data.forEach(row => {
-        let county = row.county;
-        let acres = +row.total_acres_burned || 0;
-        aggregatedAcres[county] = (aggregatedAcres[county] || 0) + acres;
-    });
-    if (countyLayer) {
-        countyLayer.setStyle(styleFeature);
-    }
-}
-
-// Replace existing GeoJSON layer creation with choropleth layer
-let countiesGeoJSONUrl = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/california-counties.geojson";
-d3.json(countiesGeoJSONUrl).then(function(data) {
-    countyLayer = L.geoJson(data, {
-        style: styleFeature
-    }).addTo(map);
+// Make request to California GeoJSON and create a layer
+let url = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/california-counties.geojson";
+d3.json(url).then(function(data) {
+  L.geoJson(data, {
+      style: function(feature) {
+          return {
+              color: "black",
+              fillColor: "white",
+              fillOpacity: 0.5,
+              weight: 1.5
+          };
+      }
+  }).addTo(map);
 });
 
 // Connect to the California wildfires data API
@@ -264,11 +227,12 @@ function updateVisualization() {
         createMarkers(filteredResponse);
     });
     
-    // Update table data and choropleth
+    // Update table data
     let filteredTableData = selectedYear === "all" ? tableData : tableData.filter(row => row.year == selectedYear);
     renderTable(filteredTableData);
+    
+    // Update bar chart visualization
     renderBarChart(filteredTableData);
-    updateChoropleth(filteredTableData); // New: Refresh choropleth based on filtered data
 }
 
 // Add layer control to the map
@@ -276,58 +240,8 @@ let baseMaps = {
   "Base Map": basemap,
   "Street Map": streetmap
 };
-let overlayMaps = {
-  "Markers": markersGroup
-};
-let layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
 
-// New: Add legend to the map for Choropleth colors with title
-let legend = L.control({position: 'bottomright'});
-legend.onAdd = function (map) {
-    let div = L.DomUtil.create('div', 'info legend');
-    // Add legend title
-    div.innerHTML = '<strong>Total Acres Burned</strong><br>';
-    let grades = [0, 10000, 20000, 50000, 100000, 200000, 500000, 1000000];
-    for (let i = 0; i < grades.length; i++) {
-        div.innerHTML +=
-            '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
-            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-    }
-    return div;
-};
-legend.addTo(map);
-
-// New: Global flag and function to toggle legend visibility
-let legendOn = true;
-function toggleLegend() {
-    if (legendOn) {
-        map.removeControl(legend);
-        legendOn = false;
-    } else {
-        legend.addTo(map);
-        legendOn = true;
-    }
-}
-
-// New: Define custom control for toggling legend on the map with bold text
-let LegendToggleControl = L.Control.extend({
-    options: { position: 'topright' },
-    onAdd: function(map) {
-        let container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-        container.style.backgroundColor = 'white';
-        container.style.padding = '5px';
-        container.style.cursor = 'pointer';
-        container.style.color = 'black';
-        container.title = 'Toggle Legend';
-        container.innerHTML = '<b>Toggle Legend</b>';
-        container.onclick = function() {
-            toggleLegend();
-        };
-        return container;
-    }
-});
-let legendToggleControl = new LegendToggleControl();
-legendToggleControl.addTo(map);
+let layerControl = L.control.layers(baseMaps).addTo(map);
 
 // Call the getData function
 getData();

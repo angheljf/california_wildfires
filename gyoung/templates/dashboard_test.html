@@ -53,7 +53,7 @@
         
         <!-- Year Selection for Filtering Data -->
         <div class="row mb-4">
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="form-group">
                     <label for="yearSelect">Select Year:</label>
                     <select id="yearSelect" class="form-control">
@@ -68,19 +68,18 @@
                     </select>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <button class="btn btn-primary mt-4" onclick="updateVisualization()">Generate Visualization</button>
             </div>
-            <!-- Removed Toggle Legend button from here -->
         </div>
 
         <div class="row">
             <div class="col-md-6" style="height:700px;">
-                <h3>County Choropleth Map</h3>
+                <h3>Wildfire Map</h3>
                 <!-- Map container taking 80% height -->
                 <div id="map" style="height: 80%;"></div>
                 <!-- Bar chart container now taking 50% height -->
-                <h3 style="margin-top:20px;">Number of Wildfires By County</h3>
+                <h3 style="margin-top:20px;">Wildfires By County</h3>
                 <div id="barChart" style="height: 80%;">
                     <!-- Bar chart will be rendered here -->
                 </div>
